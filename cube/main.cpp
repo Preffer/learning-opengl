@@ -2,7 +2,7 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <boost/format.hpp>
-#include "util.hpp"
+#include "../common/util.hpp"
 
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>

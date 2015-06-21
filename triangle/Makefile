@@ -1,7 +1,7 @@
 CC		= g++
 CFLAGS		= -std=c++11 -Wall -march=native `pkg-config --cflags glfw3 glew`
 LINKFLAGS	= `pkg-config --libs glfw3 glew`
-SRCS		= main.cpp util.cpp
+SRCS		= main.cpp ../common/util.cpp
 OBJS		= $(SRCS:.cpp=.o)
 PROG		= main
 

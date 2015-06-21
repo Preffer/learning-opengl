@@ -3,7 +3,7 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <boost/format.hpp>
-#include "util.hpp"
+#include "../common/util.hpp"
 
 using namespace std;
 using namespace boost;
@@ -32,7 +32,7 @@ int main(int argc, char* argv[]) {
 
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 
-	glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
 	GLuint vertexArrayID;
 	glGenVertexArrays(1, &vertexArrayID);
