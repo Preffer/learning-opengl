@@ -1,4 +1,5 @@
 #include <cmath>
+#include <cstring>
 #include <iostream>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -9,6 +10,13 @@ using namespace std;
 using namespace boost;
 
 int main(int argc, char* argv[]) {
+	if (argc < 2) {
+		cout << format("Usage: %1% <star>") % argv[0]<< endl;
+		return EXIT_FAILURE;
+	}
+
+	const int star = atoi(argv[1]);
+
 	if (!glfwInit()) {
 		throw runtime_error("Failed to initialize GLFW");
 	}
@@ -32,12 +40,12 @@ int main(int argc, char* argv[]) {
 
 	GLuint programID = buildProgram("vertex.shader", "fragment.shader");
 	glUseProgram(programID);
+	glClearColor(25 / 255.0f, 25 / 255.0, 25 / 255.0, 0.0f);
 
 	GLuint vertexArrayID;
 	glGenVertexArrays(1, &vertexArrayID);
 	glBindVertexArray(vertexArrayID);
 
-	const int star = 6;
 	GLfloat vertexData[star * 12];
 
 	for (int i = 0; i < star; i++) {
@@ -61,44 +69,46 @@ int main(int argc, char* argv[]) {
 		vertexData[12 * i + 11] = sin((2 * i + 1) * M_PI / star);
 	}
 
-	static const GLfloat colorData[] = { 
-		0.583f,  0.771f,  0.014f,
-		0.609f,  0.115f,  0.436f,
-		0.327f,  0.483f,  0.844f,
-		0.822f,  0.569f,  0.201f,
-		0.435f,  0.602f,  0.223f,
-		0.310f,  0.747f,  0.185f,
-		0.597f,  0.770f,  0.761f,
-		0.559f,  0.436f,  0.730f,
-		0.359f,  0.583f,  0.152f,
-		0.483f,  0.596f,  0.789f,
-		0.559f,  0.861f,  0.639f,
-		0.195f,  0.548f,  0.859f,
-		0.014f,  0.184f,  0.576f,
-		0.771f,  0.328f,  0.970f,
-		0.406f,  0.615f,  0.116f,
-		0.676f,  0.977f,  0.133f,
-		0.971f,  0.572f,  0.833f,
-		0.140f,  0.616f,  0.489f,
-		0.997f,  0.513f,  0.064f,
-		0.945f,  0.719f,  0.592f,
-		0.543f,  0.021f,  0.978f,
-		0.279f,  0.317f,  0.505f,
-		0.167f,  0.620f,  0.077f,
-		0.347f,  0.857f,  0.137f,
-		0.055f,  0.953f,  0.042f,
-		0.714f,  0.505f,  0.345f,
-		0.783f,  0.290f,  0.734f,
-		0.722f,  0.645f,  0.174f,
-		0.302f,  0.455f,  0.848f,
-		0.225f,  0.587f,  0.040f,
-		0.517f,  0.713f,  0.338f,
-		0.053f,  0.959f,  0.120f,
-		0.393f,  0.621f,  0.362f,
-		0.673f,  0.211f,  0.457f,
-		0.820f,  0.883f,  0.371f,
-		0.982f,  0.099f,  0.879f
-	};
+	GLfloat colorData[star * 18];
+
+	// center color
+	GLfloat centerColor[3];
+	centerColor[0] = float(rand()) / RAND_MAX;
+	centerColor[1] = float(rand()) / RAND_MAX;
+	centerColor[2] = float(rand()) / RAND_MAX;
+
+	/*
+	 * if: most case first
+	 *
+	 * first star => generate 3 random color
+	 * other star => generate 2 random color, copy 1 color
+	 * last  star => generate 1 random color, copy 2 color
+	 *
+	 */
+	for (int i = 0; i < star; i++) {
+		if (i != 0) {
+			memcpy(colorData + (18 * i), colorData + (18 * i - 6), sizeof(GLfloat) * 3);
+		} else {
+			colorData[0] = float(rand()) / RAND_MAX;
+			colorData[1] = float(rand()) / RAND_MAX;
+			colorData[2] = float(rand()) / RAND_MAX;
+		}
+
+		if (i != (star - 1)) {
+			colorData[18 * i + 3] = float(rand()) / RAND_MAX;
+			colorData[18 * i + 4] = float(rand()) / RAND_MAX;
+			colorData[18 * i + 5] = float(rand()) / RAND_MAX;
+		} else {
+			memcpy(colorData + (18 * i + 3), colorData, sizeof(GLfloat) * 3);
+		}
+
+		memcpy(colorData + (18 * i + 6), centerColor, sizeof(centerColor));
+		memcpy(colorData + (18 * i + 9), colorData + (18 * i), sizeof(GLfloat) * 6);
+
+		colorData[18 * i + 15] = float(rand()) / RAND_MAX;
+		colorData[18 * i + 16] = float(rand()) / RAND_MAX;
+		colorData[18 * i + 17] = float(rand()) / RAND_MAX;
+	}
 
 	GLuint vertexBuffer;
 	glGenBuffers(1, &vertexBuffer);
@@ -116,7 +126,7 @@ int main(int argc, char* argv[]) {
 
 	do {
 		glClear(GL_COLOR_BUFFER_BIT);
-		glDrawArrays(GL_TRIANGLES, 0, star * 2 * 3 * 2);
+		glDrawArrays(GL_TRIANGLES, 0, star * 12);
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	} while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS && glfwWindowShouldClose(window) == 0);
