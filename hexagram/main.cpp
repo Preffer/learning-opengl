@@ -48,6 +48,11 @@ int main(int argc, char* argv[]) {
 
 	GLfloat vertexData[star * 12];
 
+	// center vertex
+	GLfloat centerVertex[2];
+	centerVertex[0] = 0;
+	centerVertex[1] = 0;
+
 	for (int i = 0; i < star; i++) {
 		vertexData[12 * i] = cos(2 * i * M_PI / star) / 2;
 		vertexData[12 * i + 1] = sin(2 * i * M_PI / star) / 2;
@@ -55,15 +60,8 @@ int main(int argc, char* argv[]) {
 		vertexData[12 * i + 2] = cos(2 * (i + 1) * M_PI / star) / 2;
 		vertexData[12 * i + 3] = sin(2 * (i + 1) * M_PI / star) / 2;
 
-		vertexData[12 * i + 4] = 0;
-		vertexData[12 * i + 5] = 0;
-
-
-		vertexData[12 * i + 6] = cos(2 * i * M_PI / star) / 2;
-		vertexData[12 * i + 7] = sin(2 * i * M_PI / star) / 2;
-
-		vertexData[12 * i + 8] = cos(2 * (i + 1) * M_PI / star) / 2;
-		vertexData[12 * i + 9] = sin(2 * (i + 1) * M_PI / star) / 2;
+		memcpy(vertexData + (12 * i + 4), centerVertex, sizeof(GLfloat) * 2);
+		memcpy(vertexData + (12 * i + 6), vertexData + (12 * i), sizeof(GLfloat) * 4);
 
 		vertexData[12 * i + 10] = cos((2 * i + 1) * M_PI / star);
 		vertexData[12 * i + 11] = sin((2 * i + 1) * M_PI / star);
