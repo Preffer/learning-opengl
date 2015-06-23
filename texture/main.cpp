@@ -19,7 +19,7 @@ int main(int argc, char* argv[]) {
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	GLFWwindow* window = glfwCreateWindow(800, 600, "Triangle", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(512, 512, "Texture", NULL, NULL);
 	if (!window) {
 		throw runtime_error("Failed to open GLFW window");
 	}
@@ -31,6 +31,8 @@ int main(int argc, char* argv[]) {
 		throw runtime_error("Failed to initialize GLEW");
 	}
 
+	GLuint programID = buildProgram("vertex.shader", "fragment.shader");
+	glUseProgram(programID);
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
 	GLuint vertexArrayID;
@@ -38,9 +40,10 @@ int main(int argc, char* argv[]) {
 	glBindVertexArray(vertexArrayID);
 
 	static const GLfloat vertexData[] = {
-		-1.0f, -1.0f, 0.0f,
-		 1.0f, -1.0f, 0.0f,
-		 0.0f,  1.0f, 0.0f,
+		-1.0f, -1.0f,
+		-1.0f,  1.0f,
+		 1.0f, -1.0f,
+		 1.0f,  1.0f
 	};
 
 	GLuint vertexBuffer;
@@ -48,15 +51,23 @@ int main(int argc, char* argv[]) {
 	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertexData), vertexData, GL_STATIC_DRAW);
 
-	GLuint programID = buildProgram("vertex.shader", "fragment.shader");
-	glUseProgram(programID);
-
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
 	glEnableVertexAttribArray(0);
+
+	int width, height;
+	GLuint texture = readImage("uvtemplate.bmp", &width, &height);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texture);
+
+	GLuint textureID  = glGetUniformLocation(programID, "textureSampler");
+	glUniform1i(textureID, 0);
+
+	GLuint texelSizeID = glGetUniformLocation(programID, "texelSize");
+	glUniform2i(texelSizeID, width, height);
 
 	do {
 		glClear(GL_COLOR_BUFFER_BIT);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		glDrawArrays(GL_TRIANGLE_STRIP, 0, sizeof(vertexData));
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	} while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS && glfwWindowShouldClose(window) == 0);
