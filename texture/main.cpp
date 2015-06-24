@@ -31,7 +31,7 @@ int main(int argc, char* argv[]) {
 		throw runtime_error("Failed to initialize GLEW");
 	}
 
-	GLuint programID = buildProgram("vertex.shader", "fragment.shader");
+	GLuint programID = buildProgram("vertex.shader", "fragment-render.shader");
 	glUseProgram(programID);
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
@@ -55,19 +55,62 @@ int main(int argc, char* argv[]) {
 	glEnableVertexAttribArray(0);
 
 	int width, height;
-	GLuint texture = readImage("uvtemplate.bmp", &width, &height);
+	unsigned char* motionData = readBMP("motion.bmp", &width, &height);
+
+	GLuint motionID;
+	glGenTextures(1, &motionID);
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, texture);
+	glBindTexture(GL_TEXTURE_2D, motionID);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, motionData);
+	glGenerateMipmap(GL_TEXTURE_2D);
 
-	GLuint textureID  = glGetUniformLocation(programID, "textureSampler");
-	glUniform1i(textureID, 0);
+	glUniform1i(glGetUniformLocation(programID, "motion"), 0);
+	glUniform2i(glGetUniformLocation(programID, "size"), width, height);
 
-	GLuint texelSizeID = glGetUniformLocation(programID, "texelSize");
-	glUniform2i(texelSizeID, width, height);
+	char* frameData = new char[width * height * 3];
+	for(int i = 0; i < width * height * 3; i++) {
+		frameData[i] = rand();
+	}
 
+	GLuint frameTexture;
+	glGenTextures(1, &frameTexture);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, frameTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, frameData);
+	glGenerateMipmap(GL_TEXTURE_2D);
+
+	GLuint frameBuffer;
+	glGenFramebuffers(1, &frameBuffer);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, frameBuffer);
+
+	// Set "renderedTexture" as our colour attachement #0
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, frameTexture, 0);
+
+	cout << (glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE) << endl;
+
+	GLuint showID = buildProgram("vertex.shader", "fragment-show.shader");
+	glUseProgram(showID);
+	glUniform1i(glGetUniformLocation(showID, "frame"), 1);
+	glUniform2i(glGetUniformLocation(showID, "size"), width, height);
+
+	GLuint timeID = glGetUniformLocation(showID, "time");
+
+	int frameCount = 0;
 	do {
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, frameBuffer);
+
 		glClear(GL_COLOR_BUFFER_BIT);
+		glUseProgram(programID);
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, sizeof(vertexData));
+
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+
+		glClear(GL_COLOR_BUFFER_BIT);
+		glUseProgram(showID);
+		glUniform1f(timeID, glfwGetTime());
+		glDrawArrays(GL_TRIANGLE_STRIP, 0, sizeof(vertexData));
+
+		cout << format("Time: %1%, Count: %2%, FPS: %3%") % glfwGetTime() % (++frameCount) % (frameCount / glfwGetTime()) << endl;
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	} while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS && glfwWindowShouldClose(window) == 0);

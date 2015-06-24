@@ -5,7 +5,7 @@
 using namespace std;
 using namespace boost;
 
-const char* readFileBytes(const char* path) {
+char* readFileBytes(const char* path) {
 	FILE* fp = fopen(path, "r");
 	if (!fp) {
 		throw runtime_error((format("File not found: %1%") % path).str());
@@ -23,8 +23,8 @@ const char* readFileBytes(const char* path) {
 	return buffer;
 }
 
-GLuint readImage(const char* path, int* w, int* h) {
-	printf("Reading image %s\n", path);
+unsigned char* readBMP(const char* path, int* w, int* h) {
+	//printf("Reading image %s\n", path);
 
 	unsigned char header[54];
 	unsigned int dataPos;
@@ -71,17 +71,17 @@ GLuint readImage(const char* path, int* w, int* h) {
 	fclose (file);
 
 	// Create one OpenGL texture
-	GLuint textureID;
-	glGenTextures(1, &textureID);
+	//GLuint textureID;
+	//glGenTextures(1, &textureID);
 	
 	// "Bind" the newly created texture : all future texture functions will modify this texture
-	glBindTexture(GL_TEXTURE_2D, textureID);
+	//glBindTexture(GL_TEXTURE_2D, textureID);
 
 	// Give the image to OpenGL
-	glTexImage2D(GL_TEXTURE_2D, 0,GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, data);
+	//glTexImage2D(GL_TEXTURE_2D, 0,GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, data);
 
 	// OpenGL has now copied the data. Free our own version
-	delete [] data;
+	//delete [] data;
 
 	// Poor filtering, or ...
 	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -92,12 +92,12 @@ GLuint readImage(const char* path, int* w, int* h) {
 	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR); 
-	glGenerateMipmap(GL_TEXTURE_2D);
+	//glGenerateMipmap(GL_TEXTURE_2D);
 
 	// Return the ID of the texture we just created
 	*w = width;
 	*h = height;
-	return textureID;
+	return data;
 }
 
 GLuint buildShader(const char* shaderFile, GLenum shaderType) {
